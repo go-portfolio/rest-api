@@ -1,58 +1,47 @@
 package config
 
 import (
-	"log"  // для логирования ошибок
-	"os"   // для чтения файлов
-	"fmt"
-	"gopkg.in/yaml.v3" // библиотека для работы с YAML
+    "os"
+    "github.com/joho/godotenv"
+    "gopkg.in/yaml.v3"
 )
 
-// Config — структура для хранения всей конфигурации приложения
 type Config struct {
-	// Database — настройки подключения к PostgreSQL
-	Database struct {
-		User     string `yaml:"user"`     // имя пользователя базы
-		Password string `yaml:"password"` // пароль пользователя
-		Host     string `yaml:"host"`     // адрес сервера базы
-		Port     int    `yaml:"port"`     // порт базы данных
-		Name     string `yaml:"name"`     // имя базы данных
-		SslMode  string `yaml:"sslmode"`  // sslmode (disable, require и т.д.)
-	} `yaml:"database"`
-
-	// Migrations — путь к файлам миграций
-	Migrations struct {
-		Path string `yaml:"path"` // директория с SQL миграциями
-	} `yaml:"migrations"`
+    Database struct {
+        Host     string `yaml:"host"`
+        Port     string `yaml:"port"`
+        User     string `yaml:"user"`
+        Password string `yaml:"password"`
+        Name     string `yaml:"name"`
+        SslMode  string `yaml:"sslmode"`
+    } `yaml:"database"`
+    Migrations struct {
+        Path string `yaml:"path"`
+    } `yaml:"migrations"`
 }
 
-// LoadConfig — функция для загрузки конфигурации из YAML файла
-func LoadConfig(path string) *Config {
-	// Читаем содержимое файла
-	data, err := os.ReadFile(path)
-	if err != nil {
-		log.Fatalf("cannot read config: %v", err)
-	}
+func LoadConfig(path string) (*Config, error) {
+    // Подгружаем .env локально
+    godotenv.Load()
 
-	var cfg Config
-	// Парсим YAML в структуру Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		log.Fatalf("cannot unmarshal config: %v", err)
-	}
+    f, err := os.Open(path)
+    if err != nil {
+        return nil, err
+    }
+    defer f.Close()
 
-	return &cfg // возвращаем указатель на структуру
+    cfg := &Config{}
+    decoder := yaml.NewDecoder(f)
+    if err := decoder.Decode(cfg); err != nil {
+        return nil, err
+    }
+
+    // Заменяем переменные окружения
+    cfg.Database.Host = os.Getenv("DB_HOST")
+    cfg.Database.Port = os.Getenv("DB_PORT")
+    cfg.Database.User = os.Getenv("DB_USER")
+    cfg.Database.Password = os.Getenv("DB_PASSWORD")
+    cfg.Database.Name = os.Getenv("DB_NAME")
+
+    return cfg, nil
 }
-
-// DBUrl — формирует строку подключения к PostgreSQL в формате DSN
-func (c *Config) DBUrl() string {
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		c.Database.User,
-		c.Database.Password,
-		c.Database.Host,
-		c.Database.Port,   // вот здесь число останется числом
-		c.Database.Name,
-		c.Database.SslMode,
-	)
-}
-
-

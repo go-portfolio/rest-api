@@ -1,63 +1,109 @@
 package main
 
 import (
-	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 
-	_ "github.com/lib/pq"
+	"github.com/joho/godotenv"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gopkg.in/yaml.v3"
 )
 
-// Хранит настройки для подключения к БД
 type Config struct {
 	Database struct {
 		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
+		Port     string `yaml:"port"`
 		User     string `yaml:"user"`
 		Password string `yaml:"password"`
 		Name     string `yaml:"name"`
+		SslMode  string `yaml:"sslmode"`
 	} `yaml:"database"`
+	Migrations struct {
+		Path string `yaml:"path"`
+	} `yaml:"migrations"`
 }
 
-func main() {
-	fmt.Println("REST API запускается...")
-	// Открываем YAML файл
-	f, err := os.Open("../configs/config.yaml")
+func loadConfig(path string) (*Config, error) {
+	godotenv.Load() // подгружаем .env локально
+
+	f, err := os.Open(path)
 	if err != nil {
-		log.Fatal("Не удалось открыть config.yaml:", err)
+		return nil, err
 	}
 	defer f.Close()
 
-	// Читаем и парсим YAML
-	var cfg Config
-	decoder := yaml.NewDecoder(f)
-	if err := decoder.Decode(&cfg); err != nil {
-		log.Fatal("Ошибка парсинга config.yaml:", err)
+	cfg := &Config{}
+	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
+		return nil, err
 	}
 
-	// Формируем строку подключения к PostgreSQL
-	connStr := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Database.Host,
-		cfg.Database.Port,
+	// Подставляем реальные значения из переменных окружения
+	if v := os.Getenv("DB_HOST"); v != "" {
+		cfg.Database.Host = v
+	}
+	if v := os.Getenv("DB_PORT"); v != "" {
+		cfg.Database.Port = v
+	}
+	if v := os.Getenv("DB_USER"); v != "" {
+		cfg.Database.User = v
+	}
+	if v := os.Getenv("DB_PASSWORD"); v != "" {
+		cfg.Database.Password = v
+	}
+	if v := os.Getenv("DB_NAME"); v != "" {
+		cfg.Database.Name = v
+	}
+
+	return cfg, nil
+}
+
+func main() {
+	withMigrations := flag.Bool("with-migrations", false, "Apply database migrations before starting the app")
+	flag.Parse()
+
+	cfg, err := loadConfig("configs/config.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		cfg.Database.User,
 		cfg.Database.Password,
+		cfg.Database.Host,
+		cfg.Database.Port,
 		cfg.Database.Name,
+		cfg.Database.SslMode,
 	)
 
-	// Подключаемся к базе
-	db, err := sql.Open("postgres", connStr)
+	if *withMigrations {
+		fmt.Println("Applying migrations...")
+		if err := applyMigrations(dbURL, cfg.Migrations.Path); err != nil {
+			log.Fatalf("Migration failed: %v", err)
+		}
+		fmt.Println("Migrations applied successfully!")
+	}
+
+	fmt.Println("Starting application...")
+	// TODO: добавить основной код приложения
+}
+
+func applyMigrations(dbURL, migrationsPath string) error {
+	m, err := migrate.New(
+		"file://"+migrationsPath,
+		dbURL,
+	)
 	if err != nil {
-		log.Fatal("Ошибка при открытии подключения:", err)
-	}
-	defer db.Close()
-
-	// Проверяем соединение
-	if err := db.Ping(); err != nil {
-		log.Fatal("Не удалось подключиться к PostgreSQL:", err)
+		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
 
-	fmt.Println("Подключение к PostgreSQL успешно!")
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("migration up failed: %w", err)
+	}
+
+	return nil
 }

@@ -1,26 +1,29 @@
-# Путь к файлу конфигурации проекта
-CONFIG_PATH=configs/config.yaml
+# Загружаем переменные из .env
+ifneq (,$(wildcard .env))
+	include .env
+	export
+endif
 
-# Получение строки подключения к базе данных (DSN) через утилиту на Go
+MIGRATIONS_PATH=$(shell go run ./cmd/utils/config_printer.go migrations_path)
 DB_URL=$(shell go run ./cmd/utils/config_printer.go dsn)
 
-# Получение пути к миграциям через утилиту на Go
-MIGRATIONS_PATH=$(shell go run ./cmd/utils/config_printer.go migrations_path)
+# Запуск приложения
+run:
+	go run ./cmd/app/main.go --with-migrations
 
-# TODO: добавить реализацию запуска всех миграций
-# Запуск приложения с выполнением миграций
-#run:
-#	go run ./cmd/app/main.go --with-migrations
-
-# Применение всех миграций к базе данных
+# Применить все миграции
 migrate-up:
 	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" up
 
-# Откат миграций на один шаг вниз
+# Откат всех миграций
 migrate-down:
-	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" down
+	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" down -all
 
-# Принудительная установка версии миграций на 1
-# Полезно, если база данных в "грязном" состоянии и нужно синхронизировать версию
+# Принудительная установка версии миграций
 migrate-force:
-	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" force $(VERSION)
+	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" force $(or $(VERSION),1)
+
+# Сброс и повторное применение всех миграций
+migrate-reset:
+	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" drop -f
+	make --no-print-directory migrate-up
