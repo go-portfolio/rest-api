@@ -4,4 +4,6 @@ database:
   user: alex
   password: secret
   name: restapi
-  
+  sslmode: disable
+migrations:
+  path: ./migrations  
