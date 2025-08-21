@@ -12,7 +12,7 @@ migrate-up:
 
 # Откат всех миграций
 migrate-down:
-	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" down -all
+	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" down
 
 # Принудительная установка версии миграций
 migrate-force:

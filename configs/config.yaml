@@ -4,6 +4,8 @@ database:
   user: ${DB_USER}
   password: ${DB_PASSWORD}
   name: ${DB_NAME}
-  sslmode: disable
+  sslmode: disable  
 migrations:
   path: ./migrations
+jwt:  
+  jwtkey: ${JWT_SECRET_KEY}

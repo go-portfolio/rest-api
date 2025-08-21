@@ -18,11 +18,14 @@ type Config struct {
 		User     string `yaml:"user"`
 		Password string `yaml:"password"`
 		Name     string `yaml:"name"`
-		SslMode  string `yaml:"sslmode"`
+		SslMode  string `yaml:"sslmode"`		
 	} `yaml:"database"`
 	Migrations struct {
 		Path string `yaml:"path"`
 	} `yaml:"migrations"`
+	Jwt struct {
+		JwtSecretKey string `yaml:"jwtkey"`
+	} `yaml:"jwt"`
 }
 
 // LoadConfig загружает конфигурацию из YAML и .env
@@ -61,6 +64,9 @@ func LoadConfig() (*Config, error) {
 	}
 	if v := os.Getenv("DB_SSLMODE"); v != "" {
 		cfg.Database.SslMode = v
+	}
+	if v := os.Getenv("JWT_SECRET_KEY"); v != "" {
+		cfg.Jwt.JwtSecretKey = v
 	}
 
 	return cfg, nil

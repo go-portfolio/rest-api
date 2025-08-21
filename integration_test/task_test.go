@@ -17,43 +17,8 @@ import (
 )
 
 
-// Интеграционный тест для проверки работы с реальной базой данных через HTTP
-func TestGetTask(t *testing.T) {
-    // Загружаем конфигурацию из файла
-    cfg, err := config.LoadConfig()
-    if err != nil {
-        t.Fatal(err) // Завершаем тест с ошибкой, если конфиг не загрузился
-    }
-
-    // Подключаемся к базе данных PostgreSQL с помощью DSN (Data Source Name)
-    db, err := sql.Open("postgres", cfg.DSN())
-    if err != nil {
-        t.Fatal(err) // Завершаем тест с ошибкой, если не удалось подключиться к БД
-    }
-    defer db.Close() // Закрываем соединение с БД по завершению теста
-
-    // Создаем реальный сервис для работы с задачами через PostgreSQL
-    realSvc := services.NewPostgresTaskService(db)
-
-    // Поднимаем тестовый HTTP сервер
-    ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        handler := server.TasksHandler(realSvc) // Создаем обработчик задач с реальным сервисом
-        handler.ServeHTTP(w, r) // Обрабатываем HTTP-запрос
-    }))
-    defer ts.Close() // Закрываем сервер после завершения теста
-
-    // Отправляем GET-запрос для получения списка задач
-    res, err := http.Get(ts.URL + "/tasks")
-    if err != nil {
-        t.Fatal(err) // Завершаем тест с ошибкой, если запрос не удался
-    }
-
-    // Проверяем, что статус код ответа равен 200 (OK)
-    assert.Equal(t, http.StatusOK, res.StatusCode)
-}
-
 // Интеграционный тест для создания новой задачи через HTTP
-func TestCreateTask(t *testing.T) {
+func TestCreateAndGetTask(t *testing.T) {
     // Загружаем конфигурацию из файла
     cfg, err := config.LoadConfig()
     if err != nil {
