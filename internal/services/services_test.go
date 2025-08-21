@@ -23,8 +23,11 @@ func TestGetTasks(t *testing.T) {
     }
     defer db.Close()
 
+	// Создаем сервис
+	svc := NewPostgresTaskService(db)
+	
     // Проверяем сервис
-    tasks, err := GetTasks(db)
+    tasks, err := svc.GetTasks()
     if err != nil {
         t.Fatal(err)
     }
@@ -35,19 +38,29 @@ func TestGetTasks(t *testing.T) {
 }
 
 func TestCreateAndGetTasks(t *testing.T) {
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres password=123 dbname=rest_api sslmode=disable")
+	// Загружаем конфиг из корня проекта
+    cfg, err := config.LoadConfig()
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    // Подключаемся к БД
+    db, err := sql.Open("postgres", cfg.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
+	// Создаем сервис
+	svc := NewPostgresTaskService(db)
+
 	// Создаем тестовую задачу
-	id, err := CreateTask(db, "Test task", "todo")
+	id, err := svc.CreateTask("Test task", "todo")
 	if err != nil {
 		t.Fatalf("Failed to create task: %v", err)
 	}
 
-	tasks, err := GetTasks(db)
+	tasks, err := svc.GetTasks()
 	if err != nil {
 		t.Fatalf("Failed to get tasks: %v", err)
 	}
@@ -61,6 +74,6 @@ func TestCreateAndGetTasks(t *testing.T) {
 	}
 
 	if !found {
-		t.Errorf("Task not found in DB after creation")
+		t.Errorf("Таск не найден после создания")
 	}
 }

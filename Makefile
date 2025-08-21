@@ -22,3 +22,4 @@ migrate-force:
 migrate-reset:
 	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" drop -f
 	make --no-print-directory migrate-up
+
