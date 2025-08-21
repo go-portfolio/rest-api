@@ -17,6 +17,14 @@
             "mode": "test",
             "program": "${workspaceFolder}/internal/services",
             "args": []
+        },
+        {
+            "name": "Integration Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/integration_test",
+            "args": []
         }
     ]
 }
