@@ -2,7 +2,6 @@ package services
 
 import (
     "database/sql"
-    "fmt"
     "testing"
 
     "github.com/go-portfolio/rest-api/internal/config" 
@@ -11,24 +10,13 @@ import (
 
 func TestGetTasks(t *testing.T) {
     // Загружаем конфиг из корня проекта
-    cfg, err := config.LoadConfig("../../configs/config.yaml")
+    cfg, err := config.LoadConfig()
     if err != nil {
         t.Fatal(err)
     }
 
-    // Формируем DSN
-    dsn := fmt.Sprintf(
-        "postgres://%s:%s@%s:%s/%s?sslmode=%s",
-        cfg.Database.User,
-        cfg.Database.Password,
-        cfg.Database.Host,
-        cfg.Database.Port,
-        cfg.Database.Name,
-        cfg.Database.SslMode,
-    )
-
     // Подключаемся к БД
-    db, err := sql.Open("postgres", dsn)
+    db, err := sql.Open("postgres", cfg.DSN())
     if err != nil {
         t.Fatal(err)
     }

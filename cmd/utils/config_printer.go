@@ -15,7 +15,7 @@ func main() {
 	}
 
 	// Загружаем конфигурацию из файла config.yaml
-	cfg, err := config.LoadConfig("configs/config.yaml")
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err) // завершаем программу, если не удалось загрузить конфигурацию
 	}
@@ -24,14 +24,7 @@ func main() {
 	switch os.Args[1] {
 	case "dsn":
 		// Формируем строку подключения к базе данных PostgreSQL
-		fmt.Printf("postgres://%s:%s@%s:%s/%s?sslmode=%s\n",
-			cfg.Database.User,     // имя пользователя БД
-			cfg.Database.Password, // пароль
-			cfg.Database.Host,     // хост БД
-			cfg.Database.Port,     // порт
-			cfg.Database.Name,     // имя базы данных
-			cfg.Database.SslMode,  // SSL режим
-		)
+		fmt.Println(cfg.DSN())		
 	case "migrations_path":
 		// Выводим путь к папке с миграциями
 		fmt.Println(cfg.Migrations.Path)

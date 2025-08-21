@@ -1,8 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"os"
-    "path/filepath"
+	"path/filepath"
+	"log"
 
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
@@ -23,15 +25,13 @@ type Config struct {
 	} `yaml:"migrations"`
 }
 
-// LoadConfig загружает конфигурацию из YAML и подставляет переменные окружения
-func LoadConfig(configPath string) (*Config, error) {
-    // configPath — путь к config.yaml
-    configDir := filepath.Dir(configPath)
-	// поднимаемся на уровень выше и загружаем .env
-    envPath := filepath.Join(configDir, "..", ".env")
-    _ = godotenv.Load(envPath)
+// LoadConfig загружает конфигурацию из YAML и .env
+func LoadConfig() (*Config, error) {
+	configPath := сonfigPath()
+	configDir := filepath.Dir(configPath)
+	envPath := filepath.Join(configDir, "..", ".env")
+	_ = godotenv.Load(envPath)
 
-	// Открываем YAML файл конфигурации
 	f, err := os.Open(configPath)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func LoadConfig(configPath string) (*Config, error) {
 		return nil, err
 	}
 
-	// Подставляем переменные окружения, если они установлены
+	// Подстановка переменных окружения
 	if v := os.Getenv("DB_HOST"); v != "" {
 		cfg.Database.Host = v
 	}
@@ -64,4 +64,52 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// DSN возвращает готовую строку подключения к базе
+func (c *Config) DSN() string {
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		c.Database.User,
+		c.Database.Password,
+		c.Database.Host,
+		c.Database.Port,
+		c.Database.Name,
+		c.Database.SslMode,
+	)
+}
+
+
+
+// ConfigPath автоматически ищет configs/config.yaml
+func сonfigPath() string {
+	// 1. Сначала смотрим переменную окружения CONFIG_PATH
+	if path := os.Getenv("CONFIG_PATH"); path != "" {
+		return path
+	}
+
+	// 2. Начинаем поиск от текущей рабочей директории
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Cannot get working directory: %v", err)
+	}
+
+	// 3. Поднимаемся вверх по дереву директорий, пока не найдём папку configs/config.yaml
+	dir := wd
+	for {
+		tryPath := filepath.Join(dir, "configs", "config.yaml")
+		if _, err := os.Stat(tryPath); err == nil {
+			return tryPath
+		}
+
+		// Поднимаемся на уровень выше
+		parent := filepath.Dir(dir)
+		if parent == dir { // достигли корня FS
+			break
+		}
+		dir = parent
+	}
+
+	log.Fatal("Cannot find configs/config.yaml in any parent directory")
+	return ""
 }

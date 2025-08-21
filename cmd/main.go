@@ -1,84 +1,35 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/go-portfolio/rest-api/internal/config"
+	"github.com/go-portfolio/rest-api/internal/server"
+
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"gopkg.in/yaml.v3"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres" // драйвер базы для миграций
+	_ "github.com/golang-migrate/migrate/v4/source/file"       // источник миграций — файлы
+	_ "github.com/lib/pq"                                       // драйвер PostgreSQL для sql.Open
 )
 
-type Config struct {
-	Database struct {
-		Host     string `yaml:"host"`
-		Port     string `yaml:"port"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
-		Name     string `yaml:"name"`
-		SslMode  string `yaml:"sslmode"`
-	} `yaml:"database"`
-	Migrations struct {
-		Path string `yaml:"path"`
-	} `yaml:"migrations"`
-}
-
-func loadConfig(path string) (*Config, error) {
-	godotenv.Load() // подгружаем .env локально
-
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	cfg := &Config{}
-	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
-		return nil, err
-	}
-
-	// Подставляем реальные значения из переменных окружения
-	if v := os.Getenv("DB_HOST"); v != "" {
-		cfg.Database.Host = v
-	}
-	if v := os.Getenv("DB_PORT"); v != "" {
-		cfg.Database.Port = v
-	}
-	if v := os.Getenv("DB_USER"); v != "" {
-		cfg.Database.User = v
-	}
-	if v := os.Getenv("DB_PASSWORD"); v != "" {
-		cfg.Database.Password = v
-	}
-	if v := os.Getenv("DB_NAME"); v != "" {
-		cfg.Database.Name = v
-	}
-
-	return cfg, nil
-}
-
 func main() {
+	// Флаг для применения миграций перед запуском приложения
 	withMigrations := flag.Bool("with-migrations", false, "Apply database migrations before starting the app")
 	flag.Parse()
 
-	cfg, err := loadConfig("configs/config.yaml")
+	// Загружаем конфигурацию приложения (YAML + .env)
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err) // если конфиг не загрузился — выходим
 	}
 
-	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		cfg.Database.User,
-		cfg.Database.Password,
-		cfg.Database.Host,
-		cfg.Database.Port,
-		cfg.Database.Name,
-		cfg.Database.SslMode,
-	)
+	// Получаем готовую строку подключения к базе данных (DSN)
+	dbURL := cfg.DSN()
 
+	// Если указан флаг с миграциями, применяем их
 	if *withMigrations {
 		fmt.Println("Applying migrations...")
 		if err := applyMigrations(dbURL, cfg.Migrations.Path); err != nil {
@@ -87,21 +38,31 @@ func main() {
 		fmt.Println("Migrations applied successfully!")
 	}
 
+	// Подключаемся к базе данных
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Println("Starting application...")
-	// TODO: добавить основной код приложения
+	// Запускаем HTTP-сервер с маршрутами, используя подключение к базе
+	server.StartServer(db)
 }
 
+// applyMigrations применяет все миграции из указанной папки к базе данных
 func applyMigrations(dbURL, migrationsPath string) error {
+	// Создаем экземпляр миграций
 	m, err := migrate.New(
-		"file://"+migrationsPath,
-		dbURL,
+		"file://"+migrationsPath, // путь к миграциям
+		dbURL,                     // строка подключения к БД
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
 
+	// Применяем миграции
 	err = m.Up()
-	if err != nil && err != migrate.ErrNoChange {
+	if err != nil && err != migrate.ErrNoChange { // ErrNoChange — когда миграций нет
 		return fmt.Errorf("migration up failed: %w", err)
 	}
 
