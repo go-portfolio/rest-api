@@ -1,9 +1,4 @@
-# Загружаем переменные из .env
-ifneq (,$(wildcard .env))
-	include .env
-	export
-endif
-
+# Получаем пути и DSN через Go утилиту
 MIGRATIONS_PATH=$(shell go run ./cmd/utils/config_printer.go migrations_path)
 DB_URL=$(shell go run ./cmd/utils/config_printer.go dsn)
 

@@ -1,81 +1,42 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"gopkg.in/yaml.v3"
+	"fmt"                   // для вывода данных в консоль
+	"log"                   // для логирования ошибок
+	"os"                    // для работы с аргументами командной строки
+
+	"github.com/go-portfolio/rest-api/internal/config" // пакет для работы с конфигурацией
 )
 
-type Config struct {
-	Database struct {
-		Host     string `yaml:"host"`
-		Port     string `yaml:"port"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
-		Name     string `yaml:"name"`
-		SslMode  string `yaml:"sslmode"`
-	} `yaml:"database"`
-	Migrations struct {
-		Path string `yaml:"path"`
-	} `yaml:"migrations"`
-}
-
-func LoadConfig(path string) (*Config, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	cfg := &Config{}
-	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
-		return nil, err
-	}
-
-	// Подставляем переменные окружения, если они есть
-	if v := os.Getenv("DB_HOST"); v != "" {
-		cfg.Database.Host = v
-	}
-	if v := os.Getenv("DB_PORT"); v != "" {
-		cfg.Database.Port = v
-	}
-	if v := os.Getenv("DB_USER"); v != "" {
-		cfg.Database.User = v
-	}
-	if v := os.Getenv("DB_PASSWORD"); v != "" {
-		cfg.Database.Password = v
-	}
-	if v := os.Getenv("DB_NAME"); v != "" {
-		cfg.Database.Name = v
-	}
-
-	return cfg, nil
-}
-
 func main() {
+	// Проверяем, что пользователь передал аргумент командной строки
 	if len(os.Args) < 2 {
-		log.Fatal("Specify argument: 'dsn' or 'migrations_path'")
+		log.Fatal("Задайте аргументы: 'dsn' или 'migrations_path'") // завершаем программу с сообщением об ошибке
 	}
 
-	cfg, err := LoadConfig("configs/config.yaml")
+	// Загружаем конфигурацию из файла config.yaml
+	cfg, err := config.LoadConfig("configs/config.yaml")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err) // завершаем программу, если не удалось загрузить конфигурацию
 	}
 
+	// В зависимости от переданного аргумента выполняем разные действия
 	switch os.Args[1] {
 	case "dsn":
+		// Формируем строку подключения к базе данных PostgreSQL
 		fmt.Printf("postgres://%s:%s@%s:%s/%s?sslmode=%s\n",
-			cfg.Database.User,
-			cfg.Database.Password,
-			cfg.Database.Host,
-			cfg.Database.Port,
-			cfg.Database.Name,
-			cfg.Database.SslMode,
+			cfg.Database.User,     // имя пользователя БД
+			cfg.Database.Password, // пароль
+			cfg.Database.Host,     // хост БД
+			cfg.Database.Port,     // порт
+			cfg.Database.Name,     // имя базы данных
+			cfg.Database.SslMode,  // SSL режим
 		)
 	case "migrations_path":
+		// Выводим путь к папке с миграциями
 		fmt.Println(cfg.Migrations.Path)
 	default:
-		log.Fatal("Unknown argument: use 'dsn' or 'migrations_path'")
+		// Если аргумент неизвестен, завершаем программу с сообщением
+		log.Fatal("Неизвестный аргумент: используй 'dsn' или 'migrations_path'")
 	}
 }
