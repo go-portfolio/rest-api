@@ -10,7 +10,7 @@
             "env": {},
             "args": []
         },
-                {
+        {
             "name": "Debug Test",
             "type": "go",
             "request": "launch",
