@@ -122,3 +122,40 @@ Handler кодирует результат в JSON и возвращает кл
 
 Клиент получает ответ без знания, используется ли мок или реальная база.
 
+## Работа с API
+
+### 1. Получение JWT токена через `/login`
+
+Отправляем POST-запрос с логином и паролем пользователя:
+
+```bash
+curl -X POST http://localhost:8080/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alex","password":"password123"}'
+```  
+Пример ответа:
+```bash
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU4NTAzNDMsInVzZXJfaWQiOjF9.Oi05RSu-G1_y9CbfIQ7NYFkmpJYxoX7cCA-kYrQGEGw"
+}
+```
+token — это ваш JWT, который нужно использовать для авторизации при последующих запросах.
+
+2. Получение списка задач через /tasks
+Теперь можно получить задачи, передав токен в заголовке Authorization:
+```bash
+curl http://localhost:8080/tasks \
+  -H "Authorization: Bearer <ваш_JWT_токен>"
+```  
+Пример с подставленным токеном:
+```bash
+curl http://localhost:8080/tasks \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU4NTAzNDMsInVzZXJfaWQiOjF9.Oi05RSu-G1_y9CbfIQ7NYFkmpJYxoX7cCA-kYrQGEGw"
+```  
+Пример ответа:
+```json
+[
+  {"id":1,"title":"Test task","status":"todo"},
+  {"id":2,"title":"Test task","status":"todo"}
+]
+```
