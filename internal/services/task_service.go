@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql" // стандартная библиотека для работы с SQL-базами
+	"time"
 
 	"github.com/go-portfolio/rest-api/internal/models" // структура Task
 )
@@ -19,7 +20,7 @@ type TaskService interface {
 	// Создать новую задачу и вернуть её ID
 	CreateTask(userID int, title, status string) (int, error)
 	UpdateTask(id int, userID int, title, status string) (*models.Task, error)
-    DeleteTask(id int) error
+	DeleteTask(id int) error
 }
 
 // -----------------------------
@@ -40,7 +41,7 @@ func NewPostgresTaskService(db *sql.DB) *PostgresTaskService {
 // -----------------------------
 func (p *PostgresTaskService) GetTasks() ([]models.Task, error) {
 	// Выполняем SQL-запрос для получения всех задач
-	rows, err := p.DB.Query("SELECT id, title, status FROM tasks")
+	rows, err := p.DB.Query("SELECT id, title, status FROM tasks  WHERE deleted_at IS NULL")
 	if err != nil {
 		// Если ошибка при запросе — возвращаем её
 		return nil, err
@@ -86,21 +87,21 @@ func (p *PostgresTaskService) CreateTask(userID int, title, status string) (int,
 }
 
 func (s *PostgresTaskService) UpdateTask(id int, userID int, title, status string) (*models.Task, error) {
-    _, err := s.DB.Exec(`UPDATE tasks SET title=$1, status=$2, updated_at=NOW(), user_id=$4 WHERE id=$3`, title, status, id, userID)
-    if err != nil {
-        return nil, err
-    }
+	_, err := s.DB.Exec(`UPDATE tasks SET title=$1, status=$2, updated_at=NOW(), user_id=$4 WHERE id=$3 AND deleted_at IS NULL`, title, status, id, userID)
+	if err != nil {
+		return nil, err
+	}
 
-    var t models.Task
-    err = s.DB.QueryRow(`SELECT id, title, status, user_id FROM tasks WHERE id=$1`, id).Scan(&t.ID, &t.Title, &t.Status, &t.UserID)
-    if err != nil {
-        return nil, err
-    }
-    return &t, nil
+	var t models.Task
+	err = s.DB.QueryRow(`SELECT id, title, status, user_id FROM tasks WHERE id=$1`, id).Scan(&t.ID, &t.Title, &t.Status, &t.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
 }
 
 func (s *PostgresTaskService) DeleteTask(id int) error {
-    _, err := s.DB.Exec(`DELETE FROM tasks WHERE id=$1`, id)
-    return err
+	now := time.Now()
+	_, err := s.DB.Exec("UPDATE tasks SET deleted_at=$1 WHERE id=$2", now, id)
+	return err
 }
-

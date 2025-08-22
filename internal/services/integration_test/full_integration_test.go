@@ -111,7 +111,7 @@ func TestFullIntegration(t *testing.T) {
 	// --------------------------
 	// 3. Проверка, что задача действительно сохранилась в базе
 	// --------------------------
-	row := db.QueryRow(`SELECT id, title, status FROM tasks WHERE id=$1`, createdTask.ID)
+	row := db.QueryRow(`SELECT id, title, status FROM tasks WHERE id=$1 AND deleted_at IS NULL`, createdTask.ID)
 	var taskFromDB models.Task
 	err = row.Scan(&taskFromDB.ID, &taskFromDB.Title, &taskFromDB.Status)
 	if err != nil {
@@ -141,7 +141,7 @@ func TestFullIntegration(t *testing.T) {
 	assert.Equal(t, http.StatusOK, updateResp.StatusCode)
 
 	// Проверяем, что задача обновилась в базе
-	row = db.QueryRow(`SELECT id, title, status FROM tasks WHERE id=$1`, createdTask.ID)
+	row = db.QueryRow(`SELECT id, title, status FROM tasks WHERE id=$1 AND deleted_at IS NULL`, createdTask.ID)
 	err = row.Scan(&taskFromDB.ID, &taskFromDB.Title, &taskFromDB.Status)
 	if err != nil {
 		t.Fatal(err)
@@ -164,7 +164,7 @@ func TestFullIntegration(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, deleteResp.StatusCode)
 
 	// Проверяем, что задача удалена из базы
-	row = db.QueryRow(`SELECT id FROM tasks WHERE id=$1`, createdTask.ID)
+	row = db.QueryRow(`SELECT id FROM tasks WHERE id=$1 AND deleted_at IS NULL`, createdTask.ID)
 	err = row.Scan(&taskFromDB.ID)
 	assert.Error(t, err) // Ожидаем ошибку, так как задача должна быть удалена
 }
