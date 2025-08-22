@@ -18,6 +18,8 @@ type TaskService interface {
 	GetTasks() ([]models.Task, error)
 	// Создать новую задачу и вернуть её ID
 	CreateTask(title, status string) (int, error)
+	UpdateTask(id int, title, status string) (*models.Task, error)
+    DeleteTask(id int) error
 }
 
 // -----------------------------
@@ -82,3 +84,23 @@ func (p *PostgresTaskService) CreateTask(title, status string) (int, error) {
 	// Возвращаем ID созданной задачи
 	return id, nil
 }
+
+func (s *PostgresTaskService) UpdateTask(id int, title, status string) (*models.Task, error) {
+    _, err := s.DB.Exec(`UPDATE tasks SET title=$1, status=$2, updated_at=NOW() WHERE id=$3`, title, status, id)
+    if err != nil {
+        return nil, err
+    }
+
+    var t models.Task
+    err = s.DB.QueryRow(`SELECT id, title, status FROM tasks WHERE id=$1`, id).Scan(&t.ID, &t.Title, &t.Status)
+    if err != nil {
+        return nil, err
+    }
+    return &t, nil
+}
+
+func (s *PostgresTaskService) DeleteTask(id int) error {
+    _, err := s.DB.Exec(`DELETE FROM tasks WHERE id=$1`, id)
+    return err
+}
+
