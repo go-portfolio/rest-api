@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -42,15 +44,24 @@ func TestFullIntegration(t *testing.T) {
 	// --------------------------
 	taskSvc := services.NewPostgresTaskService(db)
 
+	var userID int
 	// --------------------------
 	// Создаём тестового пользователя в базе
 	// Можно хранить пароль в явном виде для упрощения теста
 	// --------------------------
-	_, err = db.Exec(`INSERT INTO users (username, password_hash) VALUES ($1, $2)
-                      ON CONFLICT (username) DO NOTHING`,
-		"testuser", "password123") // Для реального проекта лучше использовать bcrypt
+	err = db.QueryRow(`INSERT INTO users (username, password_hash) VALUES ($1, $2)
+                      ON CONFLICT (username) DO NOTHING RETURNING id`,
+		"testuser", "password123").Scan(&userID) // Для реального проекта лучше использовать bcrypt
 	if err != nil {
-		t.Fatal(err)
+		if err == sql.ErrNoRows {
+			fmt.Println("Пользователь уже существует")
+			// Можно, например, получить существующий ID:
+			db.QueryRow("SELECT id FROM users WHERE username=$1", "testuser").Scan(&userID)
+		} else {
+			log.Fatal(err)
+		}
+	} else {
+		fmt.Println("Новый пользователь ID:", userID)
 	}
 
 	// --------------------------
@@ -73,7 +84,7 @@ func TestFullIntegration(t *testing.T) {
 	defer ts.Close()
 
 	// Создаём новую задачу
-	newTask := models.Task{Title: "Integration Task", Status: "todo"}
+	newTask := models.Task{UserID: userID, Title: "Integration Task", Status: "todo"}
 	body, _ := json.Marshal(newTask) // Преобразуем в JSON
 
 	// Создаём POST-запрос с JWT в заголовке Authorization
@@ -113,7 +124,7 @@ func TestFullIntegration(t *testing.T) {
 	// --------------------------
 	// 4. Тестируем обновление задачи (PUT /tasks)
 	// --------------------------
-	updatedTask := models.Task{Title: "Updated Task. Step 4", Status: "done-step4"}
+	updatedTask := models.Task{UserID: userID, Title: "Updated Task. Step 4", Status: "done"}
 	updateBody, _ := json.Marshal(updatedTask)
 
 	url := ts.URL + "/tasks/" + strconv.Itoa(createdTask.ID)

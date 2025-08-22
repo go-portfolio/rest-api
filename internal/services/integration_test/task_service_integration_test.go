@@ -36,8 +36,9 @@ func TestCreateAndGetTask(t *testing.T) {
 	// Создаем реальный сервис для работы с задачами через PostgreSQL
 	realSvc := services.NewPostgresTaskService(db)
 
+	userID := 1
 	// Генерируем тестовый токен для пользователя с ID=1
-	token, _ := auth.GenerateToken(1, cfg.Jwt.JwtSecretKey)
+	token, _ := auth.GenerateToken(userID, cfg.Jwt.JwtSecretKey)
 	ts := httptest.NewServer(auth.VerifyToken(cfg.Jwt.JwtSecretKey)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.TasksHandler(realSvc).ServeHTTP(w, r)
 	})))
@@ -47,6 +48,7 @@ func TestCreateAndGetTask(t *testing.T) {
 	newTask := models.Task{
 		Title:  "New Task", // Заголовок задачи
 		Status: "pending",  // Статус задачи
+		UserID: userID,
 	}
 
 	// Преобразуем данные задачи в JSON
@@ -108,8 +110,9 @@ func TestUpdateTask(t *testing.T) {
 	// Создаем сервис для работы с задачами
 	realSvc := services.NewPostgresTaskService(db)
 
+	userID := 1
 	// Генерируем тестовый токен
-	token, _ := auth.GenerateToken(1, cfg.Jwt.JwtSecretKey)
+	token, _ := auth.GenerateToken(userID, cfg.Jwt.JwtSecretKey)
 
 	// Создаём HTTP тестовый сервер с авторизацией
 	ts := httptest.NewServer(auth.VerifyToken(cfg.Jwt.JwtSecretKey)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +124,7 @@ func TestUpdateTask(t *testing.T) {
 	newTask := models.Task{
 		Title:  "Task to Update",
 		Status: "pending",
+		UserID: userID,
 	}
 	taskJSON, _ := json.Marshal(newTask)
 
@@ -140,6 +144,7 @@ func TestUpdateTask(t *testing.T) {
 	updatedTask := models.Task{
 		Title:  "Updated Task",
 		Status: "done",
+		UserID: userID,
 	}
 	updateJSON, _ := json.Marshal(updatedTask)
 

@@ -33,14 +33,14 @@ func (m *MockTaskService) GetTasks() ([]models.Task, error) {
 // -----------------------------
 // Имитирует создание задачи и возвращает фиктивный ID (42).
 // Не записывает данные в базу, позволяет проверить работу POST /tasks в тестах.
-func (m *MockTaskService) CreateTask(title, status string) (int, error) {
+func (m *MockTaskService) CreateTask(userID int, title, status string) (int, error) {
 	return 42, nil
 }
 
 // -----------------------------
 // UpdateTask
 // -----------------------------
-func (m *MockTaskService) UpdateTask(id int, title, status string) (*models.Task, error) {
+func (m *MockTaskService) UpdateTask(id int, userID int, title, status string) (*models.Task, error) {
 	for i, t := range m.Tasks {
 		if t.ID == id {
 			m.Tasks[i].Title = title

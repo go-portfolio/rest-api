@@ -11,8 +11,7 @@ import (
 // Интерфейс для работы с пользователями
 type UserService interface {
     Authenticate(username, password string) (*models.User, error)
-	FindUserByEmail(db *sql.DB, email string) (models.User, error)
-	CreateUser(db *sql.DB, email, hashed string) (int, error)	
+	CreateUser(email, hashed string) (int, error)	
 }
 
 // Реализация UserService для Postgres
@@ -46,9 +45,9 @@ func (p *PostgresUserService) Authenticate(username, password string) (*models.U
 
 var ErrUserNotFound = errors.New("user not found")
 
-func (p *PostgresUserService) FindUserByEmail(db *sql.DB, email string) (models.User, error) {
+func (p *PostgresUserService) FindUserByEmail(email string) (models.User, error) {
 	var u models.User
-	row := db.QueryRow(`SELECT id, email, password FROM users WHERE email = $1`, email)
+	row := p.DB.QueryRow(`SELECT id, email, password FROM users WHERE email = $1`, email)
 	if err := row.Scan(&u.ID, &u.Email, &u.Password); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.User{}, ErrUserNotFound
@@ -58,8 +57,8 @@ func (p *PostgresUserService) FindUserByEmail(db *sql.DB, email string) (models.
 	return u, nil
 }
 
-func (p *PostgresUserService) CreateUser(db *sql.DB, email, hashed string) (int, error) {
+func (p *PostgresUserService) CreateUser(email, hashed string) (int, error) {
 	var id int
-	err := db.QueryRow(`INSERT INTO users(email, password) VALUES ($1, $2) RETURNING id`, email, hashed).Scan(&id)
+	err := p.DB.QueryRow(`INSERT INTO users(email, password) VALUES ($1, $2) RETURNING id`, email, hashed).Scan(&id)
 	return id, err
 }

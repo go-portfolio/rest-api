@@ -63,7 +63,7 @@ func TestCreateAndGetTasks(t *testing.T) {
     svc := services.NewPostgresTaskService(db)
 
     // Создаем тестовую задачу
-    id, err := svc.CreateTask("Test task", "todo")
+    id, err := svc.CreateTask(1, "Test task", "todo")
     if err != nil {
         t.Fatalf("Failed to create task: %v", err)
     }
@@ -106,13 +106,13 @@ func TestUpdateTask(t *testing.T) {
     svc := services.NewPostgresTaskService(db)
 
     // 1. Создаем задачу
-    id, err := svc.CreateTask("Initial task", "todo")
+    id, err := svc.CreateTask(1, "Initial task", "todo")
     if err != nil {
         t.Fatalf("Failed to create task: %v", err)
     }
 
     // 2. Обновляем задачу
-    _, err = svc.UpdateTask(id, "Updated task", "in-progress")
+    _, err = svc.UpdateTask(id, 1, "Updated task", "in-progress")
     if err != nil {
         t.Fatalf("Failed to update task: %v", err)
     }
@@ -156,7 +156,7 @@ func TestDeleteTask(t *testing.T) {
     svc := services.NewPostgresTaskService(db)
 
     // 1. Создаем задачу
-    id, err := svc.CreateTask("Task to delete", "todo")
+    id, err := svc.CreateTask(1, "Task to delete", "todo")
     if err != nil {
         t.Fatalf("Failed to create task: %v", err)
     }

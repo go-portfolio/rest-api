@@ -59,7 +59,7 @@ func TasksHandler(svc services.TaskService) http.HandlerFunc {
 				return
 			}
 			// Создаём новую задачу через сервис, получаем её ID
-			id, err := svc.CreateTask(t.Title, t.Status)
+			id, err := svc.CreateTask(t.UserID, t.Title, t.Status)
 			if err != nil {
 				// Если ошибка при создании в сервисе — возвращаем 500
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -83,7 +83,7 @@ func TasksHandler(svc services.TaskService) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			updated, err := svc.UpdateTask(taskID, t.Title, t.Status)
+			updated, err := svc.UpdateTask(taskID, t.UserID, t.Title, t.Status)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

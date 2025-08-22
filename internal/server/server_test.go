@@ -57,7 +57,7 @@ func TestTasksHandler(t *testing.T) {
 	// -----------------------------
 	t.Run("POST /tasks", func(t *testing.T) {
 		// Создаём новую задачу для отправки в теле запроса
-		newTask := models.Task{Title: "New Task", Status: "Open"}
+		newTask := models.Task{UserID: 1, Title: "New Task", Status: "Open"}
 		// Кодируем её в JSON
 		body, _ := json.Marshal(newTask)
 

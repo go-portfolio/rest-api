@@ -11,7 +11,7 @@
             "args": []
         },
         {
-            "name": "Debug Test",
+            "name": "Debug Service Integration Test",
             "type": "go",
             "request": "launch",
             "mode": "test",
@@ -19,11 +19,19 @@
             "args": []
         },
         {
-            "name": "Integration Test",
+            "name": "Debug Service Unit Test",
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/integration_test",
+            "program": "${workspaceFolder}/internal/services/unit",
+            "args": []
+        },
+        {
+            "name": "Debug Server Unit Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/internal/server",
             "args": []
         }
     ]

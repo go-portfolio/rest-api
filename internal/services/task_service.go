@@ -17,8 +17,8 @@ type TaskService interface {
 	// Получить все задачи
 	GetTasks() ([]models.Task, error)
 	// Создать новую задачу и вернуть её ID
-	CreateTask(title, status string) (int, error)
-	UpdateTask(id int, title, status string) (*models.Task, error)
+	CreateTask(userID int, title, status string) (int, error)
+	UpdateTask(id int, userID int, title, status string) (*models.Task, error)
     DeleteTask(id int) error
 }
 
@@ -68,12 +68,12 @@ func (p *PostgresTaskService) GetTasks() ([]models.Task, error) {
 // -----------------------------
 // Метод CreateTask
 // -----------------------------
-func (p *PostgresTaskService) CreateTask(title, status string) (int, error) {
+func (p *PostgresTaskService) CreateTask(userID int, title, status string) (int, error) {
 	var id int
 	// Выполняем INSERT и сразу возвращаем сгенерированный ID
 	err := p.DB.QueryRow(
-		"INSERT INTO tasks(title, status, created_at) VALUES($1, $2, NOW()) RETURNING id",
-		title, status,
+		"INSERT INTO tasks(title, status, created_at, user_id) VALUES($1, $2, NOW(), $3) RETURNING id",
+		title, status, userID,
 	).Scan(&id) // сканируем результат (ID) в переменную
 
 	if err != nil {
@@ -85,14 +85,14 @@ func (p *PostgresTaskService) CreateTask(title, status string) (int, error) {
 	return id, nil
 }
 
-func (s *PostgresTaskService) UpdateTask(id int, title, status string) (*models.Task, error) {
-    _, err := s.DB.Exec(`UPDATE tasks SET title=$1, status=$2, updated_at=NOW() WHERE id=$3`, title, status, id)
+func (s *PostgresTaskService) UpdateTask(id int, userID int, title, status string) (*models.Task, error) {
+    _, err := s.DB.Exec(`UPDATE tasks SET title=$1, status=$2, updated_at=NOW(), user_id=$4 WHERE id=$3`, title, status, id, userID)
     if err != nil {
         return nil, err
     }
 
     var t models.Task
-    err = s.DB.QueryRow(`SELECT id, title, status FROM tasks WHERE id=$1`, id).Scan(&t.ID, &t.Title, &t.Status)
+    err = s.DB.QueryRow(`SELECT id, title, status, user_id FROM tasks WHERE id=$1`, id).Scan(&t.ID, &t.Title, &t.Status, &t.UserID)
     if err != nil {
         return nil, err
     }
