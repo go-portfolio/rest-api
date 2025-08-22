@@ -1,0 +1,50 @@
+name: Go CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Проверка исходного кода
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # Установка Go
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.24.6'  # Укажите нужную версию Go
+
+      # Установка зависимостей
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: /tmp/go-cache
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: |
+          go mod tidy
+
+      # Тестирование проекта
+      - name: Run tests
+        run: |
+          go test -v ./...
+
+      # Линтинг кода
+      - name: Lint code
+        run: |
+          go fmt ./...
+
