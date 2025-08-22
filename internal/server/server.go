@@ -14,7 +14,21 @@ import (
 	"github.com/go-portfolio/rest-api/internal/models"
 	"github.com/go-portfolio/rest-api/internal/services"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var requestCount = prometheus.NewCounterVec(
+    prometheus.CounterOpts{
+        Name: "http_requests_total",
+        Help: "Total number of HTTP requests",
+    },
+    []string{"path", "method"},
+)
+
+func init() {
+    prometheus.MustRegister(requestCount)
+}
 
 var taskValidate = validator.New()
 
@@ -39,6 +53,9 @@ var taskValidate = validator.New()
 // @Router       /tasks/{id} [delete]
 func TasksHandler(svc services.TaskService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Считаем количество запросов к /tasks:
+		requestCount.WithLabelValues(r.URL.Path, r.Method).Inc()
+
 		// Если URL содержит ID задачи (например, /tasks/1), извлекаем его
 		pathParts := strings.Split(r.URL.Path, "/")
 		var taskID int
@@ -185,6 +202,8 @@ func StartServer(svc services.TaskService, userSvc services.UserService, cfg *co
 	mux.Handle("/tasks", auth.VerifyToken(cfg.Jwt.JwtSecretKey)(TasksHandler(svc)))
 	mux.Handle("/tasks/", auth.VerifyToken(cfg.Jwt.JwtSecretKey)(TasksHandler(svc)))
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
+	// Новый роут для метрик
+    mux.Handle("/metrics", promhttp.Handler())
 
 	// Запускаем HTTP-сервер на порту 8080
 	// В реальном приложении можно добавить логирование и graceful shutdown

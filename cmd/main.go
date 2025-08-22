@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/go-portfolio/rest-api/internal/config"   // загрузка конфигурации приложения
+	"github.com/go-portfolio/rest-api/internal/config" // загрузка конфигурации приложения
+	"github.com/go-portfolio/rest-api/internal/seed"
 	"github.com/go-portfolio/rest-api/internal/server"   // HTTP-сервер и handler’ы
 	"github.com/go-portfolio/rest-api/internal/services" // сервисы для работы с БД
-	"github.com/go-portfolio/rest-api/internal/seed"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // драйвер базы для миграций
 	_ "github.com/golang-migrate/migrate/v4/source/file"       // источник миграций — файлы
-	_ "github.com/lib/pq"                                       // драйвер PostgreSQL для sql.Open
+	_ "github.com/lib/pq"
 )
 
 // @title REST API Example
@@ -67,7 +67,7 @@ func applyMigrations(dbURL, migrationsPath string) error {
 	// Создаём объект миграций
 	m, err := migrate.New(
 		"file://"+migrationsPath, // путь к папке с миграциями
-		dbURL,                     // строка подключения к БД
+		dbURL,                    // строка подключения к БД
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)

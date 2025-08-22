@@ -34,5 +34,5 @@ func SeedUsers(db *sql.DB) {
         }
     }
 
-    log.Println("Seed users done")
+    log.Println("Пользователи загружены")
 }
