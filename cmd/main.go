@@ -48,10 +48,11 @@ func main() {
 	// Создаём сервис для работы с задачами, используя реальную базу
 	// Этот сервис реализует интерфейс TaskService
 	taskSvc := services.NewPostgresTaskService(db)
+	userSvc := services.NewPostgresUserService(db)
 
 	fmt.Println("Starting application...")
 	// Передаём сервис в сервер и запускаем HTTP-сервер
-	server.StartServer(taskSvc)
+	server.StartServer(taskSvc, userSvc, cfg)
 }
 
 // applyMigrations применяет все миграции из указанной папки к базе данных

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-portfolio/rest-api/internal/auth"
+	"github.com/go-portfolio/rest-api/internal/config"
 	"github.com/go-portfolio/rest-api/internal/models"
 	"github.com/go-portfolio/rest-api/internal/services"
 )
@@ -65,11 +67,14 @@ func TasksHandler(svc services.TaskService) http.HandlerFunc {
 
 // StartServer запускает HTTP-сервер на порту 8080
 // svc — интерфейс TaskService, чтобы обработчики могли работать с задачами
-func StartServer(svc services.TaskService) {
+func StartServer(svc services.TaskService, userSvc services.UserService, cfg *config.Config) {
 	// Создаём новый HTTP-мультиплексор (router)
 	mux := http.NewServeMux()
+	// Public endpoints
+	mux.HandleFunc("/login", LoginHandler(userSvc, cfg.Jwt.JwtSecretKey))
 	// Регистрируем маршрут /tasks и привязываем к нему handler
-	mux.HandleFunc("/tasks", TasksHandler(svc))
+	mux.Handle("/tasks", auth.VerifyToken(cfg.Jwt.JwtSecretKey)(TasksHandler(svc)))
+
 	// Запускаем HTTP-сервер на порту 8080
 	// В реальном приложении можно добавить логирование и graceful shutdown
 	http.ListenAndServe(":8080", mux)
