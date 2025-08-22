@@ -1,5 +1,7 @@
 CREATE TABLE tasks (
     id SERIAL PRIMARY KEY,
     title TEXT,
-    status TEXT
+    status TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );

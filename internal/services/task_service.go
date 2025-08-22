@@ -72,7 +72,7 @@ func (p *PostgresTaskService) CreateTask(title, status string) (int, error) {
 	var id int
 	// Выполняем INSERT и сразу возвращаем сгенерированный ID
 	err := p.DB.QueryRow(
-		"INSERT INTO tasks(title, status) VALUES($1, $2) RETURNING id",
+		"INSERT INTO tasks(title, status, created_at) VALUES($1, $2, NOW()) RETURNING id",
 		title, status,
 	).Scan(&id) // сканируем результат (ID) в переменную
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+    "strconv"
 
 	"github.com/go-portfolio/rest-api/internal/auth"
 	"github.com/go-portfolio/rest-api/internal/config"
@@ -86,6 +87,87 @@ func TestCreateAndGetTask(t *testing.T) {
 		_, err := db.Exec("DELETE FROM tasks WHERE title = 'New Task'") // Очистка данных
 		if err != nil {
 			t.Fatal("Error cleaning up test data: ", err)
+		}
+	}()
+}
+
+
+// Интеграционный тест для обновления задачи через HTTP
+func TestUpdateTask(t *testing.T) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sql.Open("postgres", cfg.DSN())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	// Создаем сервис для работы с задачами
+	realSvc := services.NewPostgresTaskService(db)
+
+	// Генерируем тестовый токен
+	token, _ := auth.GenerateToken(1, cfg.Jwt.JwtSecretKey)
+
+	// Создаём HTTP тестовый сервер с авторизацией
+	ts := httptest.NewServer(auth.VerifyToken(cfg.Jwt.JwtSecretKey)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		server.TasksHandler(realSvc).ServeHTTP(w, r)
+	})))
+	defer ts.Close()
+
+	// --- Сначала создаём новую задачу ---
+	newTask := models.Task{
+		Title:  "Task to Update",
+		Status: "pending",
+	}
+	taskJSON, _ := json.Marshal(newTask)
+
+	reqCreate, _ := http.NewRequest("POST", ts.URL+"/tasks", bytes.NewBuffer(taskJSON))
+	reqCreate.Header.Set("Content-Type", "application/json")
+	reqCreate.Header.Set("Authorization", "Bearer "+token)
+	resCreate, err := http.DefaultClient.Do(reqCreate)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resCreate.Body.Close()
+
+	var createdTask models.Task
+	json.NewDecoder(resCreate.Body).Decode(&createdTask)
+
+	// --- Теперь обновляем задачу ---
+	updatedTask := models.Task{
+		Title:  "Updated Task",
+		Status: "done",
+	}
+	updateJSON, _ := json.Marshal(updatedTask)
+
+	url := ts.URL+"/tasks/"+strconv.Itoa(createdTask.ID)
+	reqUpdate, _ := http.NewRequest("PUT", url, bytes.NewBuffer(updateJSON))
+	reqUpdate.Header.Set("Content-Type", "application/json")
+	reqUpdate.Header.Set("Authorization", "Bearer "+token)
+	resUpdate, err := http.DefaultClient.Do(reqUpdate)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resUpdate.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resUpdate.StatusCode)
+
+	var returnedTask models.Task
+	json.NewDecoder(resUpdate.Body).Decode(&returnedTask)
+
+	// Проверяем, что данные обновились
+	assert.Equal(t, updatedTask.Title, returnedTask.Title)
+	assert.Equal(t, updatedTask.Status, returnedTask.Status)
+	assert.Equal(t, createdTask.ID, returnedTask.ID)
+
+	// --- Очистка тестовых данных ---
+	defer func() {
+		_, err := db.Exec("DELETE FROM tasks WHERE id=$1", createdTask.ID)
+		if err != nil {
+			t.Fatal("Error cleaning up test data:", err)
 		}
 	}()
 }
