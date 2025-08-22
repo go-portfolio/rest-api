@@ -159,3 +159,46 @@ curl http://localhost:8080/tasks \
   {"id":2,"title":"Test task","status":"todo"}
 ]
 ```
+
+# Команды для запуска тестов
+
+## Unit-тесты
+
+### Services
+Запуск всех unit-тестов:
+```bash
+go test ./internal/services/unit -v -count=1
+```
+Запуск конкретного unit-теста:
+
+```bash
+go test ./internal/services/unit -v -run TestMockUserService_Authenticate
+```
+Server
+Запуск всех unit-тестов:
+
+```bash
+go test ./internal/server -v -count=1
+```
+Запуск конкретного unit-теста:
+
+```bash
+go test ./internal/server -v -run TestTasksHandler
+```
+Интеграционные тесты
+Запуск всех интеграционных тестов:
+
+```bash
+go test ./internal/services/integration_test -v -count=1
+```
+Запуск конкретного интеграционного теста:
+
+```bash
+go test ./internal/services/integration_test -v -run TestFullIntegration
+```
+Просмотр доступных тестов
+Список всех тестов в пакете:
+
+```bash
+go test ./internal/services/integration_test -list .
+```
