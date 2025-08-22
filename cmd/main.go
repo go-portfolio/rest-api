@@ -9,6 +9,7 @@ import (
 	"github.com/go-portfolio/rest-api/internal/config"   // загрузка конфигурации приложения
 	"github.com/go-portfolio/rest-api/internal/server"   // HTTP-сервер и handler’ы
 	"github.com/go-portfolio/rest-api/internal/services" // сервисы для работы с БД
+	"github.com/go-portfolio/rest-api/internal/seed"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // драйвер базы для миграций
@@ -45,6 +46,7 @@ func main() {
 		log.Fatal(err) // завершаем приложение, если не удалось подключиться
 	}
 
+	seed.SeedUsers(db)
 	// Создаём сервис для работы с задачами, используя реальную базу
 	// Этот сервис реализует интерфейс TaskService
 	taskSvc := services.NewPostgresTaskService(db)

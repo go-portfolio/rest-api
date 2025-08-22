@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/go-portfolio/rest-api/internal/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Интерфейс для работы с пользователями
@@ -26,20 +27,21 @@ func NewPostgresUserService(db *sql.DB) *PostgresUserService {
 }
 
 
-// Простая реализация (без БД, для демо)
-type InMemoryUserService struct {
-    Users []models.User
-}
 
 func (p *PostgresUserService) Authenticate(username, password string) (*models.User, error) {
-    for _, u := range p.Users {
-        if u.Username == username && u.Password == password {
-            return &u, nil
-        }
+    var user models.User
+    err := p.DB.QueryRow(`SELECT id, username, password_hash FROM users WHERE username=$1`, username).
+        Scan(&user.ID, &user.Username, &user.Password)
+    if err != nil {
+        return nil, err
     }
-    return nil, errors.New("invalid username or password")
-}
 
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+        return nil, errors.New("invalid password")
+    }
+
+    return &user, nil
+}
 
 
 var ErrUserNotFound = errors.New("user not found")
