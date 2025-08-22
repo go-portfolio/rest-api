@@ -1,4 +1,4 @@
-package integration_test
+package unit
 
 
 import (
@@ -14,7 +14,7 @@ import (
 // ------------------------
 // Unit-тест для MockUserService (аутентификация пользователей)
 // ------------------------
-func TestMockUserService_Authenticate(t *testing.T) {
+func TestUnitMockUserService_Authenticate(t *testing.T) {
     // Создаём mock-сервис с тестовыми пользователями
     mockSvc := &services.MockUserService{
         Users: []models.User{

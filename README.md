@@ -165,6 +165,10 @@ curl http://localhost:8080/tasks \
 ## Unit-тесты
 
 ### Services
+Запус всех тестов:
+```bash
+go test ./... -v -count=1
+```
 Запуск всех unit-тестов:
 ```bash
 go test ./internal/services/unit -v -count=1
