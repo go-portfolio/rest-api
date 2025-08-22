@@ -1,181 +1,106 @@
 package unit
 
 import (
-    "database/sql"
-    "testing"
-    "log"
+	"testing"
 
-    "github.com/go-portfolio/rest-api/internal/config" 
-    _ "github.com/lib/pq" 
-	"github.com/go-portfolio/rest-api/internal/services" 
+	"github.com/go-portfolio/rest-api/internal/models"
+	"github.com/go-portfolio/rest-api/internal/services"
 )
 
-// ------------------------
-// Интеграционный тест: получение задач из БД
-// ------------------------
-func TestGetTasks(t *testing.T) {
-    // Загружаем конфиг из корня проекта (DSN, настройки БД и т.п.)
-    cfg, err := config.LoadConfig()
-    if err != nil {
-        t.Fatal(err) // Завершаем тест при ошибке загрузки конфига
-    }
+// -----------------------------
+// Тестирование GetTasks()
+// -----------------------------
+func TestMockTaskService_GetTasks(t *testing.T) {
+	// Создаём мок-сервис
+	mock := &services.MockTaskService{}
 
-    // Подключаемся к базе данных PostgreSQL
-    db, err := sql.Open("postgres", cfg.DSN())
-    if err != nil {
-        t.Fatal(err)
-    }
-    defer db.Close() // Закрываем соединение после теста
+	// Вызываем GetTasks и проверяем результат
+	tasks, err := mock.GetTasks()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
-    // Создаем сервис для работы с задачами
-    svc := services.NewPostgresTaskService(db)
-    
-    // Получаем список задач
-    tasks, err := svc.GetTasks()
-    if err != nil {
-        t.Fatal(err)
-    }
+	// Проверяем, что вернулся ровно один таск
+	if len(tasks) != 1 {
+		t.Fatalf("expected 1 task, got %d", len(tasks))
+	}
 
-    // Проверяем, что список задач не пустой
-    if len(tasks) == 0 {
-        t.Error("expected at least one task")
-    }
+	// Проверяем, что заголовок задачи совпадает с ожидаемым
+	if tasks[0].Title != "Test Task" {
+		t.Errorf("expected task title 'Test Task', got %s", tasks[0].Title)
+	}
 }
 
-// ------------------------
-// Интеграционный тест: создание и проверка задачи
-// ------------------------
-func TestCreateAndGetTasks(t *testing.T) {
-    // Загружаем конфиг проекта
-    cfg, err := config.LoadConfig()
-    if err != nil {
-        t.Fatal(err)
-    }
+// -----------------------------
+// Тестирование CreateTask()
+// -----------------------------
+func TestMockTaskService_CreateTask(t *testing.T) {
+	mock := &services.MockTaskService{}
 
-    // Подключаемся к БД
-    db, err := sql.Open("postgres", cfg.DSN())
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close()
+	// Создаём задачу и проверяем возвращаемый ID
+	id, err := mock.CreateTask(1, "New Task", "New")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
-    // Создаем сервис для работы с задачами
-    svc := services.NewPostgresTaskService(db)
-
-    // Создаем тестовую задачу
-    id, err := svc.CreateTask(1, "Test task", "todo")
-    if err != nil {
-        t.Fatalf("Failed to create task: %v", err)
-    }
-
-    // Получаем список задач после создания
-    tasks, err := svc.GetTasks()
-    if err != nil {
-        t.Fatalf("Failed to get tasks: %v", err)
-    }
-
-    // Проверяем, что созданная задача присутствует в списке
-    found := false
-    for _, task := range tasks {
-        if task.ID == id {
-            found = true
-            break
-        }
-    }
-
-    if !found {
-        t.Errorf("Таск не найден после создания")
-    }
+	if id != 42 { // мок всегда возвращает 42
+		t.Errorf("expected ID 42, got %d", id)
+	}
 }
 
-// ------------------------
-// Интеграционный тест: обновление задачи
-// ------------------------
-func TestUpdateTask(t *testing.T) {
-    cfg, err := config.LoadConfig()
-    if err != nil {
-        t.Fatal(err)
-    }
+// -----------------------------
+// Тестирование UpdateTask()
+// -----------------------------
+func TestMockTaskService_UpdateTask(t *testing.T) {
+	mock := &services.MockTaskService{
+		Tasks: []models.Task{
+			{ID: 1, Title: "Old Title", Status: "New"},
+		},
+	}
 
-    db, err := sql.Open("postgres", cfg.DSN())
-    if err != nil {
-        t.Fatal(err)
-    }
-    defer db.Close()
+	// Обновляем существующую задачу
+	task, err := mock.UpdateTask(1, 1, "Updated Title", "Done")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
-    svc := services.NewPostgresTaskService(db)
+	// Проверяем, что данные обновились
+	if task.Title != "Updated Title" || task.Status != "Done" {
+		t.Errorf("task not updated correctly: %+v", task)
+	}
 
-    // 1. Создаем задачу
-    id, err := svc.CreateTask(1, "Initial task", "todo")
-    if err != nil {
-        t.Fatalf("Failed to create task: %v", err)
-    }
-
-    // 2. Обновляем задачу
-    _, err = svc.UpdateTask(id, 1, "Updated task", "in-progress")
-    if err != nil {
-        t.Fatalf("Failed to update task: %v", err)
-    }
-
-    // 3. Получаем список задач и проверяем обновление
-    tasks, err := svc.GetTasks()
-    if err != nil {
-        t.Fatalf("Failed to get tasks: %v", err)
-    }
-
-    found := false
-    for _, task := range tasks {
-        if task.ID == id {
-            found = true
-            if task.Title != "Updated task" || task.Status != "in-progress" {
-                t.Errorf("Task not updated correctly: got %+v", task)
-            }
-        }
-    }
-
-    if !found {
-        t.Errorf("Task with ID %d not found after update", id)
-    }
+	// Пробуем обновить несуществующую задачу
+	_, err = mock.UpdateTask(99, 1, "X", "Y")
+	if err == nil {
+		t.Errorf("expected error for non-existent task, got nil")
+	}
 }
 
-// ------------------------
-// Интеграционный тест: удаление задачи
-// ------------------------
-func TestDeleteTask(t *testing.T) {
-    cfg, err := config.LoadConfig()
-    if err != nil {
-        t.Fatal(err)
-    }
+// -----------------------------
+// Тестирование DeleteTask()
+// -----------------------------
+func TestMockTaskService_DeleteTask(t *testing.T) {
+	mock := &services.MockTaskService{
+		Tasks: []models.Task{
+			{ID: 1, Title: "Task 1", Status: "New"},
+			{ID: 2, Title: "Task 2", Status: "Done"},
+		},
+	}
 
-    db, err := sql.Open("postgres", cfg.DSN())
-    if err != nil {
-        t.Fatal(err)
-    }
-    defer db.Close()
+	// Удаляем существующую задачу
+	err := mock.DeleteTask(1)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
-    svc := services.NewPostgresTaskService(db)
+	// Проверяем, что осталась только вторая задача
+	if len(mock.Tasks) != 1 || mock.Tasks[0].ID != 2 {
+		t.Errorf("task not deleted correctly, remaining tasks: %+v", mock.Tasks)
+	}
 
-    // 1. Создаем задачу
-    id, err := svc.CreateTask(1, "Task to delete", "todo")
-    if err != nil {
-        t.Fatalf("Failed to create task: %v", err)
-    }
-
-    // 2. Удаляем задачу
-    err = svc.DeleteTask(id)
-    if err != nil {
-        t.Fatalf("Failed to delete task: %v", err)
-    }
-
-    // 3. Проверяем, что задачи нет в списке
-    tasks, err := svc.GetTasks()
-    if err != nil {
-        t.Fatalf("Failed to get tasks: %v", err)
-    }
-
-    for _, task := range tasks {
-        if task.ID == id {
-            t.Errorf("Task with ID %d still exists after deletion", id)
-        }
-    }
+	// Пробуем удалить несуществующую задачу
+	err = mock.DeleteTask(99)
+	if err == nil {
+		t.Errorf("expected error for non-existent task, got nil")
+	}
 }

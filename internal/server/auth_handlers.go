@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-portfolio/rest-api/internal/auth"
+	"github.com/go-portfolio/rest-api/internal/models"
 	"github.com/go-portfolio/rest-api/internal/services"
 )
 
@@ -20,6 +21,13 @@ import (
 // @Router       /login [post]
 func LoginHandler(userSvc services.UserService, jwtSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var u models.User
+
+		if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
 		var creds struct {
 			Username string `json:"username"`
 			Password string `json:"password"`

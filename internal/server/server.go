@@ -4,16 +4,19 @@ import (
 	"encoding/json"
 
 	"net/http"
-	"strings"
 	"strconv"
+	"strings"
 
+	"github.com/go-playground/validator/v10"
+	_ "github.com/go-portfolio/rest-api/docs" // docs генерируется swag
 	"github.com/go-portfolio/rest-api/internal/auth"
 	"github.com/go-portfolio/rest-api/internal/config"
 	"github.com/go-portfolio/rest-api/internal/models"
 	"github.com/go-portfolio/rest-api/internal/services"
-	_ "github.com/go-portfolio/rest-api/docs" // docs генерируется swag
-    httpSwagger "github.com/swaggo/http-swagger"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+var taskValidate = validator.New()
 
 // TasksHandler godoc
 // @Summary      Управление задачами
@@ -55,6 +58,17 @@ func TasksHandler(svc services.TaskService) http.HandlerFunc {
 		// Обработка GET /tasks
 		// -----------------------------
 		case http.MethodGet:
+			// простая"валидация" query-параметров
+			limitStr := r.URL.Query().Get("limit")
+			if limitStr != "" {
+				limit, err := strconv.Atoi(limitStr)
+				if err != nil || limit < 1 {
+					http.Error(w, "invalid limit", http.StatusBadRequest)
+					return
+				}
+				// используем limit
+			}
+
 			// Получаем список задач через сервис
 			tasks, err := svc.GetTasks()
 			if err != nil {
@@ -69,13 +83,23 @@ func TasksHandler(svc services.TaskService) http.HandlerFunc {
 		// Обработка POST /tasks
 		// -----------------------------
 		case http.MethodPost:
-			// Декодируем JSON-тело запроса в структуру Task
 			var t models.Task
+
 			if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
-				// Если JSON некорректен — возвращаем 400 Bad Request
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, "Invalid JSON", http.StatusBadRequest)
 				return
 			}
+
+			if err := taskValidate.Struct(t); err != nil {
+				errors := make(map[string]string)
+				for _, e := range err.(validator.ValidationErrors) {
+					errors[e.Field()] = e.Tag()
+				}
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(errors)
+				return
+			}
+
 			// Создаём новую задачу через сервис, получаем её ID
 			id, err := svc.CreateTask(t.UserID, t.Title, t.Status)
 			if err != nil {
@@ -92,13 +116,28 @@ func TasksHandler(svc services.TaskService) http.HandlerFunc {
 		// PUT /tasks/{id}
 		// -----------------------------
 		case http.MethodPut:
-			if taskID == 0 {
-				http.Error(w, "task id required", http.StatusBadRequest)
+			idStr := strings.TrimPrefix(r.URL.Path, "/tasks/")
+			id, err := strconv.Atoi(idStr)
+			if err != nil || id <= 0 {
+				http.Error(w, "invalid task ID", http.StatusBadRequest)
 				return
 			}
+
+			// 2. Декодируем тело запроса
 			var t models.Task
 			if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, "Invalid JSON", http.StatusBadRequest)
+				return
+			}
+
+			// 3. Валидируем JSON
+			if err := taskValidate.Struct(t); err != nil {
+				errors := make(map[string]string)
+				for _, e := range err.(validator.ValidationErrors) {
+					errors[e.Field()] = e.Tag()
+				}
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(errors)
 				return
 			}
 			updated, err := svc.UpdateTask(taskID, t.UserID, t.Title, t.Status)
@@ -112,15 +151,18 @@ func TasksHandler(svc services.TaskService) http.HandlerFunc {
 		// DELETE /tasks/{id}
 		// -----------------------------
 		case http.MethodDelete:
-			if taskID == 0 {
-				http.Error(w, "task id required", http.StatusBadRequest)
+			// Вытаскиваем ID из пути
+			idStr := strings.TrimPrefix(r.URL.Path, "/tasks/")
+			id, err := strconv.Atoi(idStr)
+			if err != nil || id <= 0 {
+				http.Error(w, "invalid task ID", http.StatusBadRequest)
 				return
 			}
 			if err := svc.DeleteTask(taskID); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			w.WriteHeader(http.StatusNoContent)	
+			w.WriteHeader(http.StatusNoContent)
 
 		// -----------------------------
 		// Если метод не GET и не POST
