@@ -17,6 +17,11 @@ import (
 	_ "github.com/lib/pq"                                       // драйвер PostgreSQL для sql.Open
 )
 
+// @title REST API Example
+// @version 1.0
+// @description REST API для пользователей и задач
+// @host localhost:8080
+// @BasePath /
 func main() {
 	// Флаг командной строки: если true, применяем миграции перед запуском сервера
 	withMigrations := flag.Bool("with-migrations", false, "Применить все миграции до старта приложения")

@@ -1,0 +1,269 @@
+definitions:
+  models.Task:
+    properties:
+      created_at:
+        description: |-
+          Дата создания задачи в формате RFC3339
+          example: "2025-08-22T17:00:00Z"
+        type: string
+      deletedAt:
+        description: |-
+          Дата soft-удаления задачи в формате RFC3339
+          example: "2025-08-22T17:00:00Z"
+        type: string
+      id:
+        description: |-
+          ID задачи
+          example: 1
+        type: integer
+      status:
+        description: |-
+          Статус задачи
+          example: "pending"
+        type: string
+      title:
+        description: |-
+          Заголовок задачи
+          example: "Сделать домашку"
+        type: string
+      updated_at:
+        description: |-
+          Дата обновления задачи в формате RFC3339
+          example: "2025-08-22T17:00:00Z"
+        type: string
+      user_id:
+        description: |-
+          ID пользователя, которому принадлежит задача
+          example: 42
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентификация пользователя и получение JWT токена
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: credentials
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'JWT токен"  example({"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."})'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: unauthorized
+          schema:
+            type: string
+      summary: Авторизация пользователя
+      tags:
+      - auth
+  /tasks:
+    get:
+      consumes:
+      - application/json
+      description: Получение, создание, обновление и удаление задач
+      parameters:
+      - description: Данные задачи
+        in: body
+        name: task
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список задач или обновленная задача
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "201":
+          description: Созданная задача
+          schema:
+            $ref: '#/definitions/models.Task'
+        "204":
+          description: Задача удалена
+          schema:
+            type: string
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "401":
+          description: Неавторизован
+          schema:
+            type: string
+        "404":
+          description: Задача не найдена
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Управление задачами
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Получение, создание, обновление и удаление задач
+      parameters:
+      - description: Данные задачи
+        in: body
+        name: task
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список задач или обновленная задача
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "201":
+          description: Созданная задача
+          schema:
+            $ref: '#/definitions/models.Task'
+        "204":
+          description: Задача удалена
+          schema:
+            type: string
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "401":
+          description: Неавторизован
+          schema:
+            type: string
+        "404":
+          description: Задача не найдена
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Управление задачами
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Получение, создание, обновление и удаление задач
+      parameters:
+      - description: ID задачи
+        example: 1
+        in: path
+        name: id
+        type: integer
+      - description: Данные задачи
+        in: body
+        name: task
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список задач или обновленная задача
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "201":
+          description: Созданная задача
+          schema:
+            $ref: '#/definitions/models.Task'
+        "204":
+          description: Задача удалена
+          schema:
+            type: string
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "401":
+          description: Неавторизован
+          schema:
+            type: string
+        "404":
+          description: Задача не найдена
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Управление задачами
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Получение, создание, обновление и удаление задач
+      parameters:
+      - description: ID задачи
+        example: 1
+        in: path
+        name: id
+        type: integer
+      - description: Данные задачи
+        in: body
+        name: task
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список задач или обновленная задача
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "201":
+          description: Созданная задача
+          schema:
+            $ref: '#/definitions/models.Task'
+        "204":
+          description: Задача удалена
+          schema:
+            type: string
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "401":
+          description: Неавторизован
+          schema:
+            type: string
+        "404":
+          description: Задача не найдена
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Управление задачами
+      tags:
+      - tasks
+swagger: "2.0"

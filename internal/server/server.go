@@ -11,11 +11,29 @@ import (
 	"github.com/go-portfolio/rest-api/internal/config"
 	"github.com/go-portfolio/rest-api/internal/models"
 	"github.com/go-portfolio/rest-api/internal/services"
+	_ "github.com/go-portfolio/rest-api/docs" // docs генерируется swag
+    httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// TasksHandler создаёт HTTP-обработчик для маршрута /tasks
-// svc — интерфейс TaskService, через который handler взаимодействует с задачами
-// Возвращает http.HandlerFunc, что позволяет передавать его в mux.HandleFunc
+// TasksHandler godoc
+// @Summary      Управление задачами
+// @Description  Получение, создание, обновление и удаление задач
+// @Tags         tasks
+// @Accept       json
+// @Produce      json
+// @Param        id      path      int          false  "ID задачи"  example(1)
+// @Param        task    body      models.Task  false  "Данные задачи"
+// @Success      200     {array}   models.Task        "Список задач или обновленная задача"
+// @Success      201     {object}  models.Task        "Созданная задача"
+// @Success      204     {string}  string             "Задача удалена"
+// @Failure      400     {string}  string             "Некорректный запрос"
+// @Failure      401     {string}  string             "Неавторизован"
+// @Failure      404     {string}  string             "Задача не найдена"
+// @Failure      500     {string}  string             "Внутренняя ошибка сервера"
+// @Router       /tasks [get]
+// @Router       /tasks [post]
+// @Router       /tasks/{id} [put]
+// @Router       /tasks/{id} [delete]
 func TasksHandler(svc services.TaskService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Если URL содержит ID задачи (например, /tasks/1), извлекаем его
@@ -124,6 +142,7 @@ func StartServer(svc services.TaskService, userSvc services.UserService, cfg *co
 	// Регистрируем маршрут /tasks и привязываем к нему handler
 	mux.Handle("/tasks", auth.VerifyToken(cfg.Jwt.JwtSecretKey)(TasksHandler(svc)))
 	mux.Handle("/tasks/", auth.VerifyToken(cfg.Jwt.JwtSecretKey)(TasksHandler(svc)))
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	// Запускаем HTTP-сервер на порту 8080
 	// В реальном приложении можно добавить логирование и graceful shutdown
