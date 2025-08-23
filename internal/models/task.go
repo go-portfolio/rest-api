@@ -29,7 +29,7 @@ type Task struct {
 
     // Дата soft-удаления задачи в формате RFC3339
     // example: "2025-08-22T17:00:00Z"
-    DeletedAt *time.Time `db:"deleted_at"`
+    DeletedAt *time.Time `json:"deleted_at" db:"deleted_at"`
 
     // ID пользователя, которому принадлежит задача
     // example: 42

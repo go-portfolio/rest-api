@@ -35,16 +35,19 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/server.LoginRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "JWT токен\"  example({\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"})",
+                        "description": "JWT токен и данные пользователя",
+                        "schema": {
+                            "$ref": "#/definitions/server.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный JSON",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -53,9 +56,12 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "unauthorized",
+                        "description": "Неверные учетные данные",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -363,12 +369,17 @@ const docTemplate = `{
     "definitions": {
         "models.Task": {
             "type": "object",
+            "required": [
+                "status",
+                "title",
+                "user_id"
+            ],
             "properties": {
                 "created_at": {
                     "description": "Дата создания задачи в формате RFC3339\nexample: \"2025-08-22T17:00:00Z\"",
                     "type": "string"
                 },
-                "deletedAt": {
+                "deleted_at": {
                     "description": "Дата soft-удаления задачи в формате RFC3339\nexample: \"2025-08-22T17:00:00Z\"",
                     "type": "string"
                 },
@@ -377,12 +388,21 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "status": {
-                    "description": "Статус задачи\nexample: \"pending\"",
-                    "type": "string"
+                    "description": "Статус задачи\nexample: \"pending\"\nдопустимые значения: pending, in_progress, done",
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "in_progress",
+                        "done",
+                        "todo",
+                        "open",
+                        "new"
+                    ]
                 },
                 "title": {
-                    "description": "Заголовок задачи\nexample: \"Сделать домашку\"",
-                    "type": "string"
+                    "description": "Заголовок задачи\nexample: \"Сделать домашку\"\nmin length: 1",
+                    "type": "string",
+                    "minLength": 1
                 },
                 "updated_at": {
                     "description": "Дата обновления задачи в формате RFC3339\nexample: \"2025-08-22T17:00:00Z\"",
@@ -393,18 +413,85 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "models.User": {
+            "type": "object",
+            "required": [
+                "email",
+                "password_hash",
+                "username"
+            ],
+            "properties": {
+                "created_at": {
+                    "description": "Дата создания пользователя в формате RFC3339\nexample: \"2025-08-22T17:00:00Z\"",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Электронная почта пользователя\nexample: \"user@example.com\"\nformat: email",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID пользователя\nexample: 1",
+                    "type": "integer"
+                },
+                "password_hash": {
+                    "description": "Хэш пароля пользователя\nexample: \"$2a$10$E0NRl...\"\nmin length: 6",
+                    "type": "string",
+                    "minLength": 6
+                },
+                "username": {
+                    "description": "Логин пользователя\nexample: \"user123\"\nmin length: 3\nmax length: 20",
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
+        "server.LoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "description": "Пароль пользователя\nexample: pass123",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Логин пользователя\nexample: user1",
+                    "type": "string"
+                }
+            }
+        },
+        "server.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "description": "JWT токен\nexample: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "Данные пользователя",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    ]
+                }
+            }
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "REST API Example",
+	Description:      "REST API для пользователей и задач",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

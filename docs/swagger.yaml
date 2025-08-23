@@ -1,3 +1,4 @@
+basePath: /
 definitions:
   models.Task:
     properties:
@@ -6,7 +7,7 @@ definitions:
           Дата создания задачи в формате RFC3339
           example: "2025-08-22T17:00:00Z"
         type: string
-      deletedAt:
+      deleted_at:
         description: |-
           Дата soft-удаления задачи в формате RFC3339
           example: "2025-08-22T17:00:00Z"
@@ -20,11 +21,21 @@ definitions:
         description: |-
           Статус задачи
           example: "pending"
+          допустимые значения: pending, in_progress, done
+        enum:
+        - pending
+        - in_progress
+        - done
+        - todo
+        - open
+        - new
         type: string
       title:
         description: |-
           Заголовок задачи
           example: "Сделать домашку"
+          min length: 1
+        minLength: 1
         type: string
       updated_at:
         description: |-
@@ -36,9 +47,84 @@ definitions:
           ID пользователя, которому принадлежит задача
           example: 42
         type: integer
+    required:
+    - status
+    - title
+    - user_id
     type: object
+  models.User:
+    properties:
+      created_at:
+        description: |-
+          Дата создания пользователя в формате RFC3339
+          example: "2025-08-22T17:00:00Z"
+        type: string
+      email:
+        description: |-
+          Электронная почта пользователя
+          example: "user@example.com"
+          format: email
+        type: string
+      id:
+        description: |-
+          ID пользователя
+          example: 1
+        type: integer
+      password_hash:
+        description: |-
+          Хэш пароля пользователя
+          example: "$2a$10$E0NRl..."
+          min length: 6
+        minLength: 6
+        type: string
+      username:
+        description: |-
+          Логин пользователя
+          example: "user123"
+          min length: 3
+          max length: 20
+        maxLength: 20
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password_hash
+    - username
+    type: object
+  server.LoginRequest:
+    properties:
+      password:
+        description: |-
+          Пароль пользователя
+          example: pass123
+        type: string
+      username:
+        description: |-
+          Логин пользователя
+          example: user1
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  server.LoginResponse:
+    properties:
+      token:
+        description: |-
+          JWT токен
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: Данные пользователя
+    type: object
+host: localhost:8080
 info:
   contact: {}
+  description: REST API для пользователей и задач
+  title: REST API Example
+  version: "1.0"
 paths:
   /login:
     post:
@@ -51,22 +137,26 @@ paths:
         name: credentials
         required: true
         schema:
-          additionalProperties:
-            type: string
-          type: object
+          $ref: '#/definitions/server.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: 'JWT токен"  example({"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."})'
+          description: JWT токен и данные пользователя
+          schema:
+            $ref: '#/definitions/server.LoginResponse'
+        "400":
+          description: Некорректный JSON
           schema:
             additionalProperties:
               type: string
             type: object
         "401":
-          description: unauthorized
+          description: Неверные учетные данные
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
       summary: Авторизация пользователя
       tags:
       - auth
