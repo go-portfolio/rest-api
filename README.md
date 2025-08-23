@@ -82,8 +82,11 @@ Starting application...
 ```
 ## 📂 Структура проекта
 ```
+.
 ├── cmd
-│   └── main.go
+│   ├── main.go
+│   └── utils
+│       └── config_printer.go
 ├── configs
 │   └── config.yaml
 ├── docker-compose.yml
@@ -94,6 +97,7 @@ Starting application...
 │   └── swagger.yaml
 ├── go.mod
 ├── go.sum
+├── Insomnia_2025-08-23.yaml
 ├── internal
 │   ├── auth
 │   │   └── jwt.go
@@ -114,14 +118,33 @@ Starting application...
 │       ├── auth_service.go
 │       ├── auth_service_mock.go
 │       ├── integration_test
+│       │   ├── full_integration_test.go
+│       │   └── task_service_integration_test.go
 │       ├── task_service.go
 │       ├── task_service_mock.go
 │       └── unit
+│           ├── mock_auth_service_mock.go
+│           └── mock_task_service_test.go
 ├── LICENSE
 ├── Makefile
 ├── migrations
+│   ├── 002_create_users_table.down.sql
+│   ├── 002_create_users_table.up.sql
+│   ├── 003_create_tasks_table.down.sql
+│   └── 003_create_tasks_table.up.sql
+├── monitoring
+│   ├── dashboards
+│   │   ├── provisioning
+│   │   │   └── dashboards
+│   │   │       └── dashboard.yml
+│   │   └── rest_api_dashboard.json
+│   └── prometheus.yml
 ├── prometheus.yml
 ├── README.md
+├── screenshots
+│   ├── create_task_request.png
+│   ├── get_tasks_request.png
+│   └── login_request.png
 └── tests
 ```
 ## ⚙️ Установка и запуск
