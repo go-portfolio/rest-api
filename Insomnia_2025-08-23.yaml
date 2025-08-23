@@ -1,0 +1,225 @@
+type: collection.insomnia.rest/5.0
+name: Tasks API
+meta:
+  id: wrk_e45929e3196544ef9d74869a8a741e4b
+  created: 1755947647558
+  modified: 1755947647558
+  description: ""
+collection:
+  - name: Tasks API
+    meta:
+      id: fld_85950000c746462686a36677f733226b
+      created: 1755947647560
+      modified: 1755947647560
+      sortKey: -1755947646169
+      description: Collection for testing Tasks API (CRUD)
+    children:
+      - url: http://localhost:8080/login
+        name: Login
+        meta:
+          id: req_21aeee787df643ff834673eb4e096cb8
+          created: 1755947647561
+          modified: 1755947873205
+          isPrivate: false
+          description: ""
+          sortKey: -1755947646168
+        method: POST
+        body:
+          mimeType: text/plain
+          text: |-
+            {
+              "username": "alex",
+              "password": "password123"
+            }
+        parameters:
+          - id: pair_d900d3f2246e417b8cc853376f728b88
+            name: username
+            value: alex
+            description: ""
+            disabled: true
+          - id: pair_873b4261e8cc43cab79ef5c28336ac6f
+            name: pair_d900d3f2246e417b8cc853376f728b88password
+            value: password123
+            description: ""
+            disabled: true
+        headers:
+          - name: Content-Type
+            value: application/json
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/tasks
+        name: Create Task
+        meta:
+          id: req_1b1b767e1c354af19d021a08ca287f84
+          created: 1755947647563
+          modified: 1755948181131
+          isPrivate: false
+          description: ""
+          sortKey: -1755947646166
+        method: POST
+        body:
+          mimeType: text/plain
+          text: |-
+            {
+              "userID": 1,
+              "title": "New task",
+              "status": "pending",
+            	"user_id": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            id: pair_aebe6cd50ecb42d5b4710962e2178f82
+          - name: Authorization
+            value: Bearer
+              {{token}}eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU5NTE0NzQsInVzZXJfaWQiOjR9.8kXE53-eViYyY-4GDuh_JCA9K90q8CxJV3wV-OBqLPM
+            id: pair_f10823e3391548d5b16eb0f09065cee3
+        authentication:
+          type: bearer
+          disabled: false
+          token: "{{token}}eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU5NTE0NzQsI\
+            nVzZXJfaWQiOjR9.8kXE53-eViYyY-4GDuh_JCA9K90q8CxJV3wV-OBqLPM"
+          prefix: ""
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/tasks
+        name: Get Tasks
+        meta:
+          id: req_e78e0b864f0142c5b4bea4e8962d89ab
+          created: 1755947647563
+          modified: 1755947915214
+          isPrivate: false
+          description: ""
+          sortKey: -1755947646167
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer
+              {{token}}eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU5NTE0NzQsInVzZXJfaWQiOjR9.8kXE53-eViYyY-4GDuh_JCA9K90q8CxJV3wV-OBqLPM
+            id: pair_43b9e181f0bd48699ac5d76bd8e82412
+        authentication:
+          type: bearer
+          disabled: false
+          token: "{{token}}eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU5NTE0NzQsI\
+            nVzZXJfaWQiOjR9.8kXE53-eViYyY-4GDuh_JCA9K90q8CxJV3wV-OBqLPM"
+          prefix: ""
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/tasks/1
+        name: Update Task
+        meta:
+          id: req_61d2a9e055954cba835b0770f5c95241
+          created: 1755947647564
+          modified: 1755948240618
+          isPrivate: false
+          description: ""
+          sortKey: -1755947646165
+        method: PUT
+        body:
+          mimeType: text/plain
+          text: |-
+            {
+              "user_id": 1,
+              "title": "Updated task",
+              "status": "done"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            id: pair_af02377675304d479a97052fb5f0cadb
+          - name: Authorization
+            value: Bearer
+              {{token}}eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU5NTE0NzQsInVzZXJfaWQiOjR9.8kXE53-eViYyY-4GDuh_JCA9K90q8CxJV3wV-OBqLPM
+            id: pair_3290a2cb9385492981af1853bc593abb
+        authentication:
+          type: bearer
+          disabled: false
+          token: "{{token}}"
+          prefix: ""
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/tasks/1
+        name: Delete Task
+        meta:
+          id: req_85fe8700785d4b4d8a6e8a5c45d6c362
+          created: 1755947647565
+          modified: 1755948264844
+          isPrivate: false
+          description: ""
+          sortKey: -1755947646164
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer
+              {{token}}eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU5NTE0NzQsInVzZXJfaWQiOjR9.8kXE53-eViYyY-4GDuh_JCA9K90q8CxJV3wV-OBqLPM
+            id: pair_26fb55a38b454b81bb44f1502fbd9db3
+        authentication:
+          type: bearer
+          disabled: false
+          token: "{{token}}"
+          prefix: ""
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+    scripts:
+      afterResponse: ""
+      preRequest: ""
+    environment:
+      token: ""
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_09c6a7506033cbd89c1a16df1535bc718a1dd564
+    created: 1755947647570
+    modified: 1755947647570
+environments:
+  name: Base Environment
+  meta:
+    id: env_09c6a7506033cbd89c1a16df1535bc718a1dd564
+    created: 1755947647566
+    modified: 1755947647566
+    isPrivate: false
