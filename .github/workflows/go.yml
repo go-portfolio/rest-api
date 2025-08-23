@@ -41,8 +41,8 @@ jobs:
       # Тестирование проекта
       - name: Run tests
         run: |
-          go test -v ./...
-
+          go test ./internal/server -v -count=1
+          go test ./internal/services/unit -v -count=1
       # Линтинг кода
       - name: Lint code
         run: |

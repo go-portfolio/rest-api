@@ -298,16 +298,31 @@ curl http://localhost:8080/tasks \
 ]
 ```
 ##  Тесты
-Unit-тесты:
-
+Запуск unit-теста хандлеров
 ```bash
-go test ./internal/services/unit -v -count=1
+go test ./internal/server -v -count=1
 ```
-Интеграционные тесты:
-
+Запуск конкретного unit-теста
+```bash
+go test ./internal/server -v -run TestTasksHandler
+```
+Запуск всех интеграционных тестов
 ```bash
 go test ./internal/services/integration_test -v -count=1
 ```
+Запуск конкретного интеграционного теста
+```bash
+go test ./internal/services/integration_test -v -run TestFullIntegration
+```
+Просмотр доступных тестов
+```bash
+go test ./internal/services/integration_test -list .
+```
+Unit-тесты
+```bash
+go test ./internal/services/unit -v -count=1
+```
+
 ## 📊 Grafana и Prometheus
 ```bash
 docker compose up -d
