@@ -1,5 +1,71 @@
 #  REST API для управления задачами (Go)
 API для управления задачами. Позволяет авторизоваться, создавать, получать, обновлять и удалять задачи.  
+## 📂 Структура проекта
+```
+├── cmd
+│   ├── main.go
+│   └── utils
+│       └── config_printer.go
+├── configs
+│   └── config.yaml
+├── docker-compose.yml
+├── Dockerfile
+├── docs
+│   ├── docs.go
+│   ├── swagger.json
+│   └── swagger.yaml
+├── go.mod
+├── go.sum
+├── Insomnia_2025-08-23.yaml
+├── internal
+│   ├── auth
+│   │   └── jwt.go
+│   ├── config
+│   │   └── config.go
+│   ├── models
+│   │   ├── task.go
+│   │   └── user.go
+│   ├── repositories
+│   │   └── user_repo.go
+│   ├── seed
+│   │   └── seed.go
+│   ├── server
+│   │   ├── auth_handlers.go
+│   │   ├── server.go
+│   │   └── server_test.go
+│   └── services
+│       ├── auth_service.go
+│       ├── auth_service_mock.go
+│       ├── integration_test
+│       │   ├── full_integration_test.go
+│       │   └── task_service_integration_test.go
+│       ├── task_service.go
+│       ├── task_service_mock.go
+│       └── unit
+│           ├── mock_auth_service_mock.go
+│           └── mock_task_service_test.go
+├── LICENSE
+├── Makefile
+├── migrations
+│   ├── 002_create_users_table.down.sql
+│   ├── 002_create_users_table.up.sql
+│   ├── 003_create_tasks_table.down.sql
+│   └── 003_create_tasks_table.up.sql
+├── monitoring
+│   ├── dashboards
+│   │   ├── provisioning
+│   │   │   └── dashboards
+│   │   │       └── dashboard.yml
+│   │   └── rest_api_dashboard.json
+│   └── prometheus.yml
+├── prometheus.yml
+├── README.md
+├── screenshots
+│   ├── create_task_request.png
+│   ├── get_tasks_request.png
+│   └── login_request.png
+└── tests
+```
 
 ## 🏗 Архитектура проекта REST API для управления задачами
 
@@ -155,73 +221,6 @@ Starting application...
     "status": "pending"
   }
 ]
-```
-## 📂 Структура проекта
-```
-.
-├── cmd
-│   ├── main.go
-│   └── utils
-│       └── config_printer.go
-├── configs
-│   └── config.yaml
-├── docker-compose.yml
-├── Dockerfile
-├── docs
-│   ├── docs.go
-│   ├── swagger.json
-│   └── swagger.yaml
-├── go.mod
-├── go.sum
-├── Insomnia_2025-08-23.yaml
-├── internal
-│   ├── auth
-│   │   └── jwt.go
-│   ├── config
-│   │   └── config.go
-│   ├── models
-│   │   ├── task.go
-│   │   └── user.go
-│   ├── repositories
-│   │   └── user_repo.go
-│   ├── seed
-│   │   └── seed.go
-│   ├── server
-│   │   ├── auth_handlers.go
-│   │   ├── server.go
-│   │   └── server_test.go
-│   └── services
-│       ├── auth_service.go
-│       ├── auth_service_mock.go
-│       ├── integration_test
-│       │   ├── full_integration_test.go
-│       │   └── task_service_integration_test.go
-│       ├── task_service.go
-│       ├── task_service_mock.go
-│       └── unit
-│           ├── mock_auth_service_mock.go
-│           └── mock_task_service_test.go
-├── LICENSE
-├── Makefile
-├── migrations
-│   ├── 002_create_users_table.down.sql
-│   ├── 002_create_users_table.up.sql
-│   ├── 003_create_tasks_table.down.sql
-│   └── 003_create_tasks_table.up.sql
-├── monitoring
-│   ├── dashboards
-│   │   ├── provisioning
-│   │   │   └── dashboards
-│   │   │       └── dashboard.yml
-│   │   └── rest_api_dashboard.json
-│   └── prometheus.yml
-├── prometheus.yml
-├── README.md
-├── screenshots
-│   ├── create_task_request.png
-│   ├── get_tasks_request.png
-│   └── login_request.png
-└── tests
 ```
 ## ⚙️ Установка и запуск
 Создать .env:
