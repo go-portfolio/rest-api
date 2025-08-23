@@ -1,5 +1,85 @@
 # REST API Project
 
+## Запуск приложения
+
+Для запуска приложения используйте команду:
+
+```bash
+go run ./cmd/main.go
+```
+Пример вывода в консоли:
+```
+2025/08/23 14:15:03 Пользователи загружены
+Starting application...
+```
+## Login
+
+Метод: POST /login
+Описание: Авторизация пользователя для получения JWT-токена.
+
+Тело запроса:
+```json
+{
+  "username": "alex",
+  "password": "password123"
+}
+```
+
+Пример запроса (Insomnia):
+![Login Request](screenshots/login_request.png)
+
+Пример ответа:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+## Create Task
+
+Метод: POST /tasks
+Описание: Создание новой задачи. Требует токен авторизации.
+
+Тело запроса:
+```json
+{
+  "userID": 1,
+  "title": "Новая задача",
+  "status": "pending"
+}
+```
+
+Пример запроса (Insomnia):
+![Create Task Request](screenshots/create_task_request.png)
+
+Пример ответа:
+```json
+{
+  "id": 1,
+  "userID": 1,
+  "title": "Новая задача",
+  "status": "pending"
+}
+```
+
+## Get Tasks
+
+Метод: GET /tasks
+Описание: Получение списка всех задач пользователя. Требует токен авторизации.
+
+Пример запроса (Insomnia):
+![Get Tasks Request](screenshots/get_tasks_request.png)
+Пример ответа:
+```json
+[
+  {
+    "id": 1,
+    "userID": 1,
+    "title": "Новая задача",
+    "status": "pending"
+  }
+]
+```
 ---
 
 ## Структура проекта
