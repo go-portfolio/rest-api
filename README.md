@@ -286,7 +286,7 @@ make migrate-reset
 ```
 
 ## 📊 Мониторинг
- -Grafana и Prometheus
+Grafana и Prometheus
 ```bash
 docker compose up -d
 
@@ -313,7 +313,7 @@ go run ./cmd/main.go
 ![Swagger](screenshots/swagger.png)
 
 ## Тестирование
-- Unit / Integration
+Unit / Integration
 Запуск всех тестов 
 ```bash
 go test ./... -v -count=1
